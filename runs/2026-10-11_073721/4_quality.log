@@ -1,0 +1,42 @@
+PASS  [1 Code computes] gross_revenue = quantity x unit_price on every line  
+PASS  [1 Code computes] net_revenue = qty x price x (1 - discount) on every line (metrics.md)  
+PASS  [1 Code computes] discount_amount = gross - net on every line  
+PASS  [1 Code computes] cent rounding per line moves the year by < 0.001% of revenue  revenue unrounded 33,506,875.93 vs stored 33,506,864.27; discount literal 738,919.26 vs stored 738,930.92
+PASS  [1 Code computes] quantity is a whole number >= 1  
+PASS  [1 Code computes] discount_rate between 0 and 0.5  
+PASS  [1 Code computes] unit_price > 0  
+PASS  [1 Code computes] stock never negative  
+PASS  [1 Code computes] every fact key finds its dimension  
+PASS  [1 Code computes] dimension keys unique  
+PASS  [1 Code computes] inventory: one snapshot per article per month  
+PASS  [1 Code computes] raw lines = clean lines + removed lines  raw 160,821, clean 156,824
+PASS  [1 Code computes] clean lines = fact_sales lines  156,824
+PASS  [1 Code computes] clean inventory = fact_inventory rows  4,222
+PASS  [2 Two roads] Revenue: sum of mart net_revenue vs recomputed from clean columns  33,506,864.27 vs 33,506,864.27
+PASS  [2 Two roads] Revenue: mart vs straight from raw (own dedupe)  33,506,864.27 vs 33,506,864.27
+PASS  [2 Two roads] Orders: distinct count vs group-by count vs raw  101,142 / 101,142 / 101,142
+PASS  [2 Two roads] Units: sum in mart vs sum in raw (deduped)  205,473
+PASS  [2 Two roads] Revenue: sum of months = total  
+PASS  [2 Two roads] Revenue: sum of countries = total  
+PASS  [2 Two roads] Revenue: sum of channels = total  
+PASS  [2 Two roads] Revenue: sum of categories = total  
+PASS  [2 Two roads] Revenue per month: mart (via dim_date) vs raw (via parsed dates)  max gap 0.0000
+PASS  [2 Two roads] Stock on hand 2025-12: mart vs clean vs raw  41,307 / 41,307 / 41,307
+PASS  [2 Two roads] Best-selling product: mart vs clean agree  KO-49107
+PASS  [2 Two roads] Products out of stock at 2025-12: mart vs clean agree  11 products
+PASS  [3 Trace orders] order SO472265: raw -> clean -> mart match  1 lines, 2 units, EUR 19.98, DE
+PASS  [3 Trace orders] order SO506300: raw -> clean -> mart match  2 lines, 7 units, EUR 4,077.93, NL
+PASS  [3 Trace orders] order SO510392: raw -> clean -> mart match  2 lines, 2 units, EUR 20.43, AT
+PASS  [3 Trace orders] order SO473737: raw -> clean -> mart match  1 lines, 1 units, EUR 13.07, DE
+PASS  [3 Trace orders] order SO478586: raw -> clean -> mart match  1 lines, 1 units, EUR 208.95, AT
+PASS  [3 Trace orders] order SO552456: raw -> clean -> mart match  3 lines, 4 units, EUR 69.90, DE
+PASS  [3 Trace orders] order SO449660: raw -> clean -> mart match  2 lines, 2 units, EUR 617.98, DE
+PASS  [3 Trace orders] order SO490652: raw -> clean -> mart match  2 lines, 2 units, EUR 607.98, DE
+PASS  [3 Trace orders] order SO522125: raw -> clean -> mart match  1 lines, 1 units, EUR 159.99, DE
+PASS  [3 Trace orders] order SO548557: raw -> clean -> mart match  2 lines, 2 units, EUR 1,028.00, NL
+PASS  [3 Trace orders] sample seed recorded (rerun with --seed to repeat)  seed 188244
+PASS  [4 Always true] every month has sales  12 months
+PASS  [4 Always true] no empty files in clean or mart  9 files
+PASS  [4 Always true] no revenue is negative  
+PASS  [4 Always true] December is the biggest month of 2025 by revenue  biggest 2025-12 EUR 3,417,243.75
+quality: 41/41 passed

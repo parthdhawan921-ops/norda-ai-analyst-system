@@ -1,0 +1,108 @@
+/// DIMENSION. One row per calendar day. Both facts join here, so one date or month slicer drives
+/// sales and stock together. Use year_month for the month slicer: stock exists only on month ends.
+table dim_date
+	dataCategory: Time
+	lineageTag: 84fa88a1-b5f3-56fa-b95d-010c7c4df0af
+
+	/// Surrogate key YYYYMMDD, e.g. 20251231. Joins to both facts. Hidden: plumbing.
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7d642cad-1a6b-5a3c-a9c8-9de727d33de9
+		summarizeBy: none
+		sourceColumn: date_key
+
+		annotation SummarizationSetBy = User
+
+	/// The calendar day. The model is marked as a date table on this column.
+	column date
+		dataType: dateTime
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: 249983e2-9dda-5f37-a0e7-15e201216858
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation SummarizationSetBy = User
+
+	/// Calendar year.
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: 3a535093-fec8-5d2b-bcbb-cfc39c43deeb
+		summarizeBy: none
+		sourceColumn: year
+
+		annotation SummarizationSetBy = User
+
+	/// Calendar quarter 1-4.
+	column quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: e8ea5a84-0714-5f90-8080-464536c991af
+		summarizeBy: none
+		sourceColumn: quarter
+
+		annotation SummarizationSetBy = User
+
+	/// Month number 1-12. Only sorts month_name. Hidden.
+	column month_num
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 234d918a-7240-5465-b9a3-dbd85f0c3658
+		summarizeBy: none
+		sourceColumn: month_num
+
+		annotation SummarizationSetBy = User
+
+	/// Month name, sorted by month_num so the axis reads January to December.
+	column month_name
+		dataType: string
+		lineageTag: 1ae40ab1-b7bc-5555-bce8-cf7660f1385f
+		summarizeBy: none
+		sortByColumn: month_num
+		sourceColumn: month_name
+
+		annotation SummarizationSetBy = User
+
+	/// Month as YYYY-MM. Use this as the month slicer.
+	column year_month
+		dataType: string
+		lineageTag: 12f84a3f-73fe-59bb-bdb1-40116d833ac4
+		summarizeBy: none
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = User
+
+	/// Day of the month 1-31.
+	column day_of_month
+		dataType: int64
+		formatString: 0
+		lineageTag: f9aea613-17db-594c-af7d-59a5fc4befb1
+		summarizeBy: none
+		sourceColumn: day_of_month
+
+		annotation SummarizationSetBy = User
+
+	/// 1 on the last day of each month (the only days with stock), else 0.
+	column is_month_end
+		dataType: int64
+		formatString: 0
+		lineageTag: e4bbf982-cc70-58c2-bd5d-60b333293485
+		summarizeBy: none
+		sourceColumn: is_month_end
+
+		annotation SummarizationSetBy = User
+
+	partition dim_date = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("D:\Data Analytics\Baraa\Claude\claude linkedin\data\mart\dim_date.csv"),[Delimiter=",", Columns=9, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"date_key", Int64.Type}, {"date", type date}, {"year", Int64.Type}, {"quarter", Int64.Type}, {"month_num", Int64.Type}, {"month_name", type text}, {"year_month", type text}, {"day_of_month", Int64.Type}, {"is_month_end", Int64.Type}})
+				in
+				    #"Changed Type"
+

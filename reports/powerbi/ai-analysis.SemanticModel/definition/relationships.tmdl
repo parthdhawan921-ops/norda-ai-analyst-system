@@ -1,0 +1,24 @@
+relationship dim_date_to_fact_sales
+	fromColumn: fact_sales.order_date_key
+	toColumn: dim_date.date_key
+
+relationship dim_product_to_fact_sales
+	fromColumn: fact_sales.product_key
+	toColumn: dim_product.product_key
+
+relationship dim_country_to_fact_sales
+	fromColumn: fact_sales.country_key
+	toColumn: dim_country.country_key
+
+relationship dim_channel_to_fact_sales
+	fromColumn: fact_sales.channel_key
+	toColumn: dim_channel.channel_key
+
+relationship dim_date_to_fact_inventory
+	fromColumn: fact_inventory.snapshot_date_key
+	toColumn: dim_date.date_key
+
+relationship dim_product_to_fact_inventory
+	fromColumn: fact_inventory.product_key
+	toColumn: dim_product.product_key
+

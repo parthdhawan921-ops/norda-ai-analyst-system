@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+# Power BI local cache
+reports/powerbi/**/.pbi/localSettings.json
+reports/powerbi/**/.pbi/cache.abf
+
+# Course exercise files (LinkedIn Learning) - not mine to publish
+knowledge/inbox/*.pdf
+data/raw/*.csv
+data/incoming/*.csv
+data/clean/**/*.csv
+data/mart/*.csv

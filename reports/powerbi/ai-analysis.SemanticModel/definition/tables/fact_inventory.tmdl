@@ -1,0 +1,57 @@
+/// FACT. One row per article per month end: units in the one warehouse. SEMI-ADDITIVE: adds across
+/// articles, never across months; use the Stock on Hand measure. No country or channel: stock does
+/// not move with those filters.
+table fact_inventory
+	lineageTag: 3ce26828-90da-5e3e-a26d-2c72cac940c4
+
+	/// Key to dim_date: always the last day of the month. Hidden: plumbing.
+	column snapshot_date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 031d88df-6b21-5d1f-89ee-04a9cef14ae3
+		summarizeBy: none
+		sourceColumn: snapshot_date_key
+
+		annotation SummarizationSetBy = User
+
+	/// Key to dim_product. Hidden: plumbing.
+	column product_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f4d42611-007e-5232-a80b-914f26019d70
+		summarizeBy: none
+		sourceColumn: product_key
+
+		annotation SummarizationSetBy = User
+
+	/// The month of the count, YYYY-MM. Slice by dim_date[year_month] instead.
+	column stock_month
+		dataType: string
+		lineageTag: dd42b81e-f25a-5f40-af1d-8f74c91f0ce4
+		summarizeBy: none
+		sourceColumn: stock_month
+
+		annotation SummarizationSetBy = User
+
+	/// Units in the warehouse at month end. Do not sum across months.
+	column quantity_on_hand
+		dataType: int64
+		formatString: #,0
+		lineageTag: 7c15a0cf-f5ef-5a17-86c8-7c788391af1b
+		summarizeBy: sum
+		sourceColumn: quantity_on_hand
+
+		annotation SummarizationSetBy = User
+
+	partition fact_inventory = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("D:\Data Analytics\Baraa\Claude\claude linkedin\data\mart\fact_inventory.csv"),[Delimiter=",", Columns=4, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"snapshot_date_key", Int64.Type}, {"product_key", Int64.Type}, {"stock_month", type text}, {"quantity_on_hand", Int64.Type}})
+				in
+				    #"Changed Type"
+

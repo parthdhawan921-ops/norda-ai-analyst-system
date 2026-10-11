@@ -1,0 +1,74 @@
+/// DIMENSION. One row per article in the whole catalogue (also articles never sold). Brand and
+/// category are cleaned to 6 brands and 5 categories (knowledge/company.md).
+table dim_product
+	lineageTag: 7f465854-769e-5e15-a8c2-f8687d73b805
+
+	/// Surrogate key from the sorted sku, stable across rebuilds. Joins to both facts. Hidden:
+	/// plumbing.
+	column product_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c8ae9443-8f6a-5b49-9903-fd6a9d1646f7
+		summarizeBy: none
+		sourceColumn: product_key
+
+		annotation SummarizationSetBy = User
+
+	/// Article number, e.g. KA-10999. Same as ART_NO in the raw export.
+	column sku
+		dataType: string
+		lineageTag: ca017c50-2d1c-5353-8bd8-959e399d331f
+		summarizeBy: none
+		sourceColumn: sku
+
+		annotation SummarizationSetBy = User
+
+	/// Display name of the article.
+	column product_name
+		dataType: string
+		lineageTag: fbe44a31-a68b-5b04-acf7-6725e00f5bdc
+		summarizeBy: none
+		sourceColumn: product_name
+
+		annotation SummarizationSetBy = User
+
+	/// Brand: Kaivo, Kova, Nodo, Ondia, Pavo, Visna.
+	column brand
+		dataType: string
+		lineageTag: 85cfbab7-79e3-575b-bb55-d733cd10337b
+		summarizeBy: none
+		sourceColumn: brand
+
+		annotation SummarizationSetBy = User
+
+	/// Category: Accessories, Audio, Computers, Monitors, Phones & Tablets.
+	column category
+		dataType: string
+		lineageTag: 1c6a4e3c-34f8-5193-ac9c-1bec4f2d24ca
+		summarizeBy: none
+		sourceColumn: category
+
+		annotation SummarizationSetBy = User
+
+	/// REFERENCE ONLY. Undated catalogue price; differs from the price paid on many orders. Use
+	/// fact_sales[unit_price].
+	column list_price
+		dataType: double
+		formatString: \€#,0.00;-\€#,0.00;\€#,0.00
+		lineageTag: 50fb336b-5cce-511e-9bde-4b250686b056
+		summarizeBy: none
+		sourceColumn: list_price
+
+		annotation SummarizationSetBy = User
+
+	partition dim_product = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("D:\Data Analytics\Baraa\Claude\claude linkedin\data\mart\dim_product.csv"),[Delimiter=",", Columns=6, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"product_key", Int64.Type}, {"sku", type text}, {"product_name", type text}, {"brand", type text}, {"category", type text}, {"list_price", type number}})
+				in
+				    #"Changed Type"
+

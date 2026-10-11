@@ -1,0 +1,16 @@
+PASS  dim_date: date_key unique (the '1' side)  365 rows
+PASS  dim_product: product_key unique (the '1' side)  377 rows
+PASS  dim_country: country_key unique (the '1' side)  6 rows
+PASS  dim_channel: channel_key unique (the '1' side)  3 rows
+PASS  fact_sales.order_date_key -> dim_date: no orphans  0 orphans
+PASS  fact_sales.product_key -> dim_product: no orphans  0 orphans
+PASS  fact_sales.country_key -> dim_country: no orphans  0 orphans
+PASS  fact_sales.channel_key -> dim_channel: no orphans  0 orphans
+PASS  fact_inventory.snapshot_date_key -> dim_date: no orphans  0 orphans
+PASS  fact_inventory.product_key -> dim_product: no orphans  0 orphans
+PASS  fact_sales rows = clean orders rows  156,824 vs 156,824
+PASS  fact_inventory rows = clean inventory rows  4,222 vs 4,222
+PASS  revenue in fact = revenue in clean  33,506,864.27
+PASS  snapshot dates are month ends  
+PASS  no link between the two facts  
+mart: dim_date 365, dim_product 377, dim_country 6, dim_channel 3, fact_sales 156,824, fact_inventory 4,222

@@ -1,0 +1,165 @@
+/// FACT. One row per order line (one article on one order), before returns. Count orders with the
+/// Orders measure, never with a row count. Duplicates were removed in data/clean.
+table fact_sales
+	lineageTag: 5ee710fd-f479-53ce-862a-fe72c6ab8271
+
+	/// Key to dim_date: the day the order was placed. Hidden: plumbing.
+	column order_date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 45cdaf8a-621e-58ce-91fd-4ab86437ff86
+		summarizeBy: none
+		sourceColumn: order_date_key
+
+		annotation SummarizationSetBy = User
+
+	/// Key to dim_product. Hidden: plumbing.
+	column product_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 03e4947e-c863-5f97-87fa-bbd550758b56
+		summarizeBy: none
+		sourceColumn: product_key
+
+		annotation SummarizationSetBy = User
+
+	/// Key to dim_country (delivery country). Hidden: plumbing.
+	column country_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 0152c1d0-f073-537c-9be3-33ea77bdd6e6
+		summarizeBy: none
+		sourceColumn: country_key
+
+		annotation SummarizationSetBy = User
+
+	/// Key to dim_channel. Hidden: plumbing.
+	column channel_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 697e647d-ea57-594e-8547-8ec5cef6ef8f
+		summarizeBy: none
+		sourceColumn: channel_key
+
+		annotation SummarizationSetBy = User
+
+	/// Order number. Repeats on every line of the same order.
+	column order_id
+		dataType: string
+		lineageTag: c83a48d9-8a54-5c7a-94a8-c20a3aa04a85
+		summarizeBy: none
+		sourceColumn: order_id
+
+		annotation SummarizationSetBy = User
+
+	/// Units of this article on this line.
+	column quantity
+		dataType: int64
+		formatString: #,0
+		lineageTag: 98d7f617-9024-530f-a681-55edac3edd44
+		summarizeBy: sum
+		sourceColumn: quantity
+
+		annotation SummarizationSetBy = User
+
+	/// Price of one unit at order time, before discount. The price actually charged.
+	column unit_price
+		dataType: double
+		formatString: \€#,0.00;-\€#,0.00;\€#,0.00
+		lineageTag: 77aae081-dcae-591e-925d-24fa5c8abf64
+		summarizeBy: none
+		sourceColumn: unit_price
+
+		annotation SummarizationSetBy = User
+
+	/// Discount as a fraction (0.15 = 15%). Not yet taken off unit_price.
+	column discount_rate
+		dataType: double
+		formatString: 0%
+		lineageTag: 3fada6e9-5f71-59ab-a52c-324264af54f7
+		summarizeBy: none
+		sourceColumn: discount_rate
+
+		annotation SummarizationSetBy = User
+
+	/// quantity x unit_price, before discount. Reference only.
+	column gross_revenue
+		dataType: double
+		formatString: \€#,0.00;-\€#,0.00;\€#,0.00
+		lineageTag: ae479b35-3acf-5cbe-b9f4-6c31e9a1531b
+		summarizeBy: sum
+		sourceColumn: gross_revenue
+
+		annotation SummarizationSetBy = User
+
+	/// gross_revenue - net_revenue, so gross = net + discount on every line.
+	column discount_amount
+		dataType: double
+		formatString: \€#,0.00;-\€#,0.00;\€#,0.00
+		lineageTag: 80db62d6-929c-5001-b732-32e27463fdc1
+		summarizeBy: sum
+		sourceColumn: discount_amount
+
+		annotation SummarizationSetBy = User
+
+	/// quantity x unit_price x (1 - discount_rate), rounded to the cent. What Revenue sums.
+	column net_revenue
+		dataType: double
+		formatString: \€#,0.00;-\€#,0.00;\€#,0.00
+		lineageTag: 1206de77-f877-5df4-897b-805abce470eb
+		summarizeBy: sum
+		sourceColumn: net_revenue
+
+		annotation SummarizationSetBy = User
+
+	/// knowledge/metrics.md line 6: quantity x unit price x (1 - discount)
+	/// Sums the per-line net_revenue. Before returns: returns are in a separate system.
+	measure 'Revenue' = SUM(fact_sales[net_revenue])
+		formatString: \€#,0.00;-\€#,0.00;\€#,0.00
+		lineageTag: f58c6962-2eba-53d0-9e88-7a248e5de98f
+		displayFolder: metrics
+
+	/// knowledge/metrics.md line 9: quantity x unit price x discount
+	/// Sums per-line discount_amount (gross - net), so Revenue + Discount Amount = gross to the cent.
+	measure 'Discount Amount' = SUM(fact_sales[discount_amount])
+		formatString: \€#,0.00;-\€#,0.00;\€#,0.00
+		lineageTag: 9988d78f-f891-5cb4-968d-a9e708b579ac
+		displayFolder: metrics
+
+	/// knowledge/metrics.md line 12: distinct order numbers, not lines. one order with three products
+	/// is one order.
+	/// The fact is at order-LINE grain, so a row count would answer a different question.
+	measure 'Orders' = DISTINCTCOUNT(fact_sales[order_id])
+		formatString: #,0
+		lineageTag: 794ab153-55c5-598a-a176-06b88c7eff1b
+		displayFolder: metrics
+
+	/// knowledge/metrics.md line 15: sum of quantity
+	measure 'Units Sold' = SUM(fact_sales[quantity])
+		formatString: #,0
+		lineageTag: dab70b2f-0f10-5312-a9cb-4bf2685d5ff7
+		displayFolder: metrics
+
+	/// knowledge/metrics.md line 18: quantity at month end, from inventory
+	/// Stock is a month-end snapshot: LASTDATE takes the latest day in the filter, so a month or the
+	/// year shows the last month end, never twelve month ends added up. Blank if the filter holds no
+	/// month end.
+	measure 'Stock on Hand' = CALCULATE(SUM(fact_inventory[quantity_on_hand]), LASTDATE(dim_date[date]))
+		formatString: #,0
+		lineageTag: 56ded736-f040-59fe-8656-055d34750a21
+		displayFolder: metrics
+
+	partition fact_sales = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("D:\Data Analytics\Baraa\Claude\claude linkedin\data\mart\fact_sales.csv"),[Delimiter=",", Columns=11, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"order_date_key", Int64.Type}, {"product_key", Int64.Type}, {"country_key", Int64.Type}, {"channel_key", Int64.Type}, {"order_id", type text}, {"quantity", Int64.Type}, {"unit_price", type number}, {"discount_rate", type number}, {"gross_revenue", type number}, {"discount_amount", type number}, {"net_revenue", type number}})
+				in
+				    #"Changed Type"
+

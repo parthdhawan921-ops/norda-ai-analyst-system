@@ -1,0 +1,53 @@
+/// DIMENSION. One row per delivery country. Spain and Austria are in the orders but not in the
+/// company overview.
+table dim_country
+	lineageTag: 3fcde112-4add-5d3c-8e1f-1bb9ca651d09
+
+	/// Surrogate key. Joins to fact_sales. Hidden: plumbing.
+	column country_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c1ce0bb2-2c18-5fe6-9516-1d05746b4a51
+		summarizeBy: none
+		sourceColumn: country_key
+
+		annotation SummarizationSetBy = User
+
+	/// ISO code. Cleaned: the raw export mixed codes (DE) and names (Germany).
+	column country_code
+		dataType: string
+		lineageTag: 6d26cb84-7b64-5bea-b604-223ce8b1f170
+		summarizeBy: none
+		sourceColumn: country_code
+
+		annotation SummarizationSetBy = User
+
+	/// Country name. Use on slicers and axes.
+	column country_name
+		dataType: string
+		lineageTag: 3aae5591-a8c3-5513-acda-c5a701480fb9
+		summarizeBy: none
+		sourceColumn: country_name
+
+		annotation SummarizationSetBy = User
+
+	/// Yes if norda-overview.pdf lists the country as a market (DE, FR, IT, NL), else No.
+	column in_company_overview
+		dataType: string
+		lineageTag: 9370b1a5-fc78-5390-9687-dd86ec247f38
+		summarizeBy: none
+		sourceColumn: in_company_overview
+
+		annotation SummarizationSetBy = User
+
+	partition dim_country = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("D:\Data Analytics\Baraa\Claude\claude linkedin\data\mart\dim_country.csv"),[Delimiter=",", Columns=4, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"country_key", Int64.Type}, {"country_code", type text}, {"country_name", type text}, {"in_company_overview", type text}})
+				in
+				    #"Changed Type"
+

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NORDA Sales Dashboard</title>
+<style>
+:root{color-scheme:dark;--bg:#121211;--surface:#1a1a19;--surface-2:#222220;--border:#2c2c2a;--grid:#2a2a28;
+--text:#f0efec;--text-2:#c3c2b7;--muted:#8f8e86;--series:#3987e5;--series-soft:rgba(57,135,229,.16);--hi:#d95926;
+--crit:#e66767;--warn:#c98500;--good:#199e70}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+.app{max-width:1440px;margin:0 auto;padding:18px 20px 28px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 20px;margin-bottom:12px}
+h1{margin:0;font-size:20px;font-weight:600;letter-spacing:.2px}.meta{color:var(--muted);font-size:12px}
+.filters{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px}
+.fgroup{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.flabel{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.6px;margin-right:2px}
+.chip{border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);border-radius:999px;padding:4px 10px;font:inherit;font-size:12.5px;cursor:pointer}
+.chip:hover{border-color:#4a4a46;color:var(--text)}.chip.on{background:var(--series);border-color:var(--series);color:#fff}
+select{background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font:inherit;font-size:12.5px}
+.reset{margin-left:auto;background:none;border:1px solid var(--border);color:var(--text-2);border-radius:6px;padding:5px 12px;cursor:pointer;font:inherit;font-size:12.5px}
+.reset:hover{color:var(--text);border-color:#4a4a46}
+.active{color:var(--text-2);font-size:12px;margin:-6px 2px 12px;min-height:16px}.active b{color:var(--text);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;min-width:0}
+.card h2{margin:0 0 2px;font-size:13.5px;font-weight:600}.card .sub{color:var(--muted);font-size:11.5px;margin-bottom:8px}
+.kpi{grid-column:span 3}.kpi .label{color:var(--text-2);font-size:12.5px}.kpi .value{font-size:30px;font-weight:600;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.kpi .note{color:var(--muted);font-size:11.5px;min-height:15px}.kpi svg{display:block;margin-top:6px}
+.trend{grid-column:span 8}.country{grid-column:span 4}.products{grid-column:span 5}.stock{grid-column:span 7}
+@media(max-width:1100px){.kpi{grid-column:span 6}.trend,.country,.products,.stock{grid-column:span 12}}
+@media(max-width:560px){.kpi{grid-column:span 12}.app{padding:12px}}
+svg text{font-family:inherit}.axis{fill:var(--muted);font-size:11px}.vlabel{fill:var(--text-2);font-size:11.5px}.blabel{fill:var(--text);font-size:12px}
+.hit{fill:transparent;cursor:pointer}.bar{cursor:pointer}
+.tbl{max-height:372px;overflow:auto;border-top:1px solid var(--border)}table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{position:sticky;top:0;background:var(--surface);color:var(--muted);font-weight:500;text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);font-size:11.5px}
+td{padding:6px 8px;border-bottom:1px solid #242422;font-variant-numeric:tabular-nums}td.n,th.n{text-align:right}
+tr.row{cursor:pointer}tr.row:hover td{background:#20201e}
+.st{display:inline-flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap}.st i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.legend{display:flex;gap:14px;color:var(--muted);font-size:11.5px;margin-bottom:6px;flex-wrap:wrap}
+#tip{position:fixed;pointer-events:none;background:#0b0b0a;border:1px solid #3a3a37;border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text);box-shadow:0 6px 20px rgba(0,0,0,.45);opacity:0;transition:opacity .08s;z-index:10;max-width:280px}
+#tip .t{font-weight:600;margin-bottom:3px}#tip .r{display:flex;justify-content:space-between;gap:16px;color:var(--text-2)}#tip .r b{color:var(--text);font-weight:600}
+footer{color:var(--muted);font-size:11.5px;margin-top:14px;line-height:1.6}
+</style></head><body><div class="app">
+<header><h1>NORDA · Sales &amp; Stock</h1><div class="meta" id="meta"></div></header>
+<div class="filters" id="filters"></div>
+<div class="active" id="active"></div>
+<div class="grid">
+ <div class="card kpi" id="k-rev"></div><div class="card kpi" id="k-ord"></div><div class="card kpi" id="k-units"></div><div class="card kpi" id="k-stock"></div>
+ <div class="card trend"><h2>Revenue per month</h2><div class="sub">Click a month to filter the page. Orange = best month.</div><div id="c-trend"></div></div>
+ <div class="card country"><h2>Revenue by country</h2><div class="sub">Click a country to filter. * not listed as a market in the company overview.</div><div id="c-country"></div></div>
+ <div class="card products"><h2>Best-selling products</h2><div class="sub">Top 10 by revenue. Click a product to filter.</div><div id="c-products"></div></div>
+ <div class="card stock"><h2>Stock and sales per product</h2><div class="sub" id="stock-sub"></div>
+  <div class="legend"><span class="st"><i style="background:var(--crit)"></i>Ran out: zero stock at a month end</span><span class="st"><i style="background:var(--warn)"></i>Low: less than one month of sales left</span><span class="st"><i style="background:var(--good)"></i>OK</span></div>
+  <div class="tbl" id="c-stock"></div></div>
+</div>
+<footer>Revenue = quantity × unit price × (1 − discount), before returns (knowledge/metrics.md). Orders = distinct order numbers. Stock on hand = units in the warehouse at the last month end in the selection; NORDA has one warehouse, so stock does not change with the country or channel filter. Source: data/mart only. Rebuild with <code>/dashboard</code>.</footer>
+</div><div id="tip"></div>
+<script>
+const D=__DATA__;
+const dec=(s,T)=>{const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return new T(u.buffer)};
+const oM=dec(D.o_month,Uint8Array),oC=dec(D.o_country,Uint8Array),oCh=dec(D.o_channel,Uint8Array);
+const lO=dec(D.l_order,Uint32Array),lP=dec(D.l_product,Uint16Array),lQ=dec(D.l_qty,Uint16Array),lR=dec(D.l_rev,Uint32Array),STK=dec(D.stock,Int32Array);
+const NM=D.months.length,NP=D.products.length,NC=D.countries.length,NO=D.nOrders,NL=D.nLines;
+const pCat=new Uint8Array(NP);D.products.forEach((p,i)=>pCat[i]=p[1]);
+const MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const mLab=m=>{const[y,mm]=m.split("-");return MN[+mm-1]+" "+y};
+const MULTI=new Set(D.months.map(m=>m.slice(0,4))).size>1;
+const mShort=m=>{const[y,mm]=m.split("-");return MN[+mm-1]+(MULTI&&(mm==="01"||m===D.months[0])?" '"+y.slice(2):"")};
+const S={m:-1,cat:-1,c:-1,ch:-1,p:-1};
+const eur=c=>"€"+(c/100).toLocaleString("en-IE",{minimumFractionDigits:2,maximumFractionDigits:2});
+const eurS=c=>{const v=c/100;return v>=1e6?"€"+(v/1e6).toFixed(2)+"M":v>=1e3?"€"+(v/1e3).toFixed(1)+"K":"€"+v.toFixed(0)};
+const num=v=>v.toLocaleString("en-IE");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const mark1=new Int32Array(NO),mark2=new Int32Array(NO);let stamp=0;
+
+function compute(){
+ stamp++;const R={rev:0,units:0,orders:0,revM:new Float64Array(NM),unitsM:new Float64Array(NM),ordM:new Float64Array(NM),
+  revC:new Float64Array(NC),revP:new Float64Array(NP),unitsP:new Float64Array(NP)};
+ for(let i=0;i<NL;i++){const o=lO[i],p=lP[i];
+  if(S.ch>=0&&oCh[o]!==S.ch)continue;if(S.cat>=0&&pCat[p]!==S.cat)continue;
+  const m=oM[o],c=oC[o],r=lR[i],q=lQ[i];const okM=S.m<0||m===S.m,okC=S.c<0||c===S.c,okP=S.p<0||p===S.p;
+  if(okC&&okP){R.revM[m]+=r;R.unitsM[m]+=q;if(mark2[o]!==stamp){mark2[o]=stamp;R.ordM[m]++}}
+  if(okM&&okP)R.revC[c]+=r;
+  if(okM&&okC){R.revP[p]+=r;R.unitsP[p]+=q}
+  if(okM&&okC&&okP){R.rev+=r;R.units+=q;if(mark1[o]!==stamp){mark1[o]=stamp;R.orders++}}}
+ R.stockM=new Float64Array(NM);
+ for(let p=0;p<NP;p++){if(S.cat>=0&&pCat[p]!==S.cat)continue;if(S.p>=0&&p!==S.p)continue;
+  for(let m=0;m<NM;m++){const v=STK[p*NM+m];if(v>0)R.stockM[m]+=v}}
+ R.endM=S.m>=0?S.m:NM-1;R.stock=R.stockM[R.endM];return R}
+
+// ---------- tooltip ----------
+const tip=document.getElementById("tip");
+function showTip(e,html){tip.innerHTML=html;tip.style.opacity=1;const w=tip.offsetWidth,h=tip.offsetHeight;
+ let x=e.clientX+14,y=e.clientY+14;if(x+w>innerWidth-8)x=e.clientX-w-14;if(y+h>innerHeight-8)y=e.clientY-h-14;tip.style.left=x+"px";tip.style.top=y+"px"}
+const hideTip=()=>tip.style.opacity=0;
+const rows=a=>a.map(([k,v])=>`<div class="r"><span>${k}</span><b>${v}</b></div>`).join("");
+function bindTips(root){root.querySelectorAll("[data-tip]").forEach(el=>{el.addEventListener("mousemove",e=>showTip(e,TIPS[el.dataset.tip]()));el.addEventListener("mouseleave",hideTip)})}
+let TIPS={};
+
+// ---------- filters ----------
+function chipGroup(label,items,key){return `<div class="fgroup"><span class="flabel">${label}</span>${items.map((t,i)=>`<button class="chip${S[key]===i?" on":""}" data-k="${key}" data-i="${i}">${esc(t)}</button>`).join("")}</div>`}
+function renderFilters(){
+ document.getElementById("filters").innerHTML=
+  `<div class="fgroup"><span class="flabel">Month</span><select id="msel"><option value="-1">All months</option>${D.months.map((m,i)=>`<option value="${i}"${S.m===i?" selected":""}>${mLab(m)}</option>`).join("")}</select></div>`+
+  chipGroup("Category",D.categories,"cat")+chipGroup("Country",D.countries.map(c=>c[1]),"c")+chipGroup("Channel",D.channels,"ch")+
+  `<button class="reset" id="reset">Reset filters</button>`;
+ document.getElementById("msel").onchange=e=>{S.m=+e.target.value;render()};
+ document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>toggle(b.dataset.k,+b.dataset.i));
+ document.getElementById("reset").onclick=()=>{Object.keys(S).forEach(k=>S[k]=-1);render()};
+ const a=[];if(S.m>=0)a.push(["Month",mLab(D.months[S.m])]);if(S.cat>=0)a.push(["Category",D.categories[S.cat]]);
+ if(S.c>=0)a.push(["Country",D.countries[S.c][0]]);if(S.ch>=0)a.push(["Channel",D.channels[S.ch]]);if(S.p>=0)a.push(["Product",D.products[S.p][0]]);
+ document.getElementById("active").innerHTML=a.length?"Filtered by "+a.map(([k,v])=>`${k}: <b>${esc(v)}</b>`).join(" · "):"Showing all data. Click any bar, month or chip to filter."}
+function toggle(k,i){S[k]=S[k]===i?-1:i;render()}
+
+// ---------- KPI cards ----------
+function spark(vals,sel,w,h){const max=Math.max(...vals,1),n=vals.length,x=i=>4+i*(w-8)/Math.max(n-1,1),y=v=>h-4-(v/max)*(h-10);
+ const d=Array.from(vals,(v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+ const dot=sel>=0?`<circle cx="${x(sel)}" cy="${y(vals[sel])}" r="3.5" fill="var(--hi)"/>`:"";
+ return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${d}" fill="none" stroke="var(--series)" stroke-width="2" vector-effect="non-scaling-stroke"/>${dot}</svg>`}
+function kpi(id,label,value,note,series,tipKey){const el=document.getElementById(id);
+ el.innerHTML=`<div class="label">${label}</div><div class="value" data-tip="${tipKey}">${value}</div><div class="note">${note}</div>${spark(series,S.m,260,38)}`}
+
+// ---------- charts ----------
+function trend(R){const el=document.getElementById("c-trend"),W=Math.max(el.clientWidth,320),H=250,L=58,Rp=14,T=22,B=28;
+ const v=R.revM,max=Math.max(...v)*1.1||1,n=NM,step=(W-L-Rp)/n,x=i=>L+step*(i+.5),y=val=>T+(H-T-B)*(1-val/max);
+ const best=v.indexOf(Math.max(...v));let s=`<svg width="${W}" height="${H}">`;
+ for(let k=0;k<=4;k++){const val=max*k/4,yy=y(val);s+=`<line x1="${L}" x2="${W-Rp}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text class="axis" x="${L-8}" y="${yy+4}" text-anchor="end">${eurS(val)}</text>`}
+ if(S.m>=0)s+=`<rect x="${L+step*S.m}" y="${T-6}" width="${step}" height="${H-T-B+6}" fill="var(--series-soft)" rx="4"/>`;
+ const d=Array.from(v,(val,i)=>`${i?"L":"M"}${x(i)},${y(val)}`).join("");
+ s+=`<path d="${d} L${x(n-1)},${y(0)} L${x(0)},${y(0)} Z" fill="var(--series-soft)" opacity=".6"/><path d="${d}" fill="none" stroke="var(--series)" stroke-width="2"/>`;
+ for(let i=0;i<n;i++){const isB=i===best;s+=`<circle cx="${x(i)}" cy="${y(v[i])}" r="${isB?5:4}" fill="${isB?"var(--hi)":"var(--series)"}" stroke="var(--surface)" stroke-width="2"/>`;
+  s+=`<text class="axis" x="${x(i)}" y="${H-8}" text-anchor="middle">${mShort(D.months[i])}</text>`}
+ s+=`<text class="vlabel" x="${x(best)}" y="${y(v[best])-11}" text-anchor="${best>n-2?"end":"middle"}" fill="var(--text)">${eurS(v[best])}</text>`;
+ for(let i=0;i<n;i++)s+=`<rect class="hit" data-tip="m${i}" data-m="${i}" x="${L+step*i}" y="${T}" width="${step}" height="${H-T-B}"/>`;
+ el.innerHTML=s+"</svg>";
+ for(let i=0;i<n;i++){const prev=i?v[i-1]:0;TIPS["m"+i]=()=>`<div class="t">${mLab(D.months[i])}</div>`+rows([["Revenue",eur(v[i])],["Orders",num(R.ordM[i])],["Units",num(R.unitsM[i])],
+  ["vs previous month",i&&prev?((v[i]/prev-1)*100).toFixed(1)+"%":"–"]])+`<div class="r" style="margin-top:4px;color:var(--muted)">Click to ${S.m===i?"clear":"filter"}</div>`}
+ el.querySelectorAll(".hit").forEach(h=>h.onclick=()=>toggle("m",+h.dataset.m));bindTips(el)}
+
+function hbars(elId,items,selKey,tipPrefix,labelW){const el=document.getElementById(elId),W=Math.max(el.clientWidth,300),rowH=30,H=items.length*rowH+6;
+ const max=Math.max(...items.map(d=>d.v),1),x0=labelW,x1=W-78,top=items.length?items[0].v:0;
+ let s=`<svg width="${W}" height="${H}">`;
+ items.forEach((d,j)=>{const y=j*rowH+4,w=Math.max((x1-x0)*d.v/max,d.v>0?2:0),sel=S[selKey]===d.i,dim=S[selKey]>=0&&!sel;
+  const fill=sel?"var(--hi)":(S[selKey]<0&&j===0&&d.v===top&&d.v>0?"var(--hi)":"var(--series)");
+  s+=`<g class="bar" data-i="${d.i}" data-tip="${tipPrefix}${d.i}" opacity="${dim?.4:1}"><rect x="0" y="${y}" width="${W}" height="${rowH-4}" fill="transparent"/>`+
+   `<text class="blabel" x="${x0-8}" y="${y+17}" text-anchor="end">${esc(d.label.length>30?d.label.slice(0,29)+"…":d.label)}</text>`+
+   `<rect x="${x0}" y="${y+5}" width="${w}" height="${rowH-14}" rx="4" fill="${fill}"/>`+
+   `<text class="vlabel" x="${x0+w+6}" y="${y+17}">${eurS(d.v)}</text></g>`});
+ el.innerHTML=s+"</svg>";el.querySelectorAll(".bar").forEach(b=>b.onclick=()=>toggle(selKey,+b.dataset.i));bindTips(el)}
+
+function countries(R){const tot=R.revC.reduce((a,b)=>a+b,0);
+ const items=D.countries.map((c,i)=>({i,v:R.revC[i],label:c[0]+(c[2]?"":" *")})).sort((a,b)=>b.v-a.v);
+ items.forEach(d=>TIPS["c"+d.i]=()=>{const c=D.countries[d.i];return `<div class="t">${c[0]} (${c[1]})</div>`+rows([["Revenue",eur(d.v)],["Share",tot?(d.v/tot*100).toFixed(1)+"%":"–"],
+  ["In company overview",c[2]?"Yes":"No"]])});hbars("c-country",items,"c","c",104)}
+
+function products(R){const tot=R.revP.reduce((a,b)=>a+b,0);let idx=Array.from({length:NP},(_,i)=>i).filter(i=>R.revP[i]>0).sort((a,b)=>R.revP[b]-R.revP[a]).slice(0,10);
+ if(S.p>=0&&!idx.includes(S.p))idx=idx.slice(0,9).concat([S.p]);
+ const items=idx.map(i=>({i,v:R.revP[i],label:D.products[i][0]}));
+ items.forEach(d=>TIPS["p"+d.i]=()=>{const p=D.products[d.i];return `<div class="t">${esc(p[0])}</div>`+rows([["Category",D.categories[p[1]]],["Brand",p[2]],["SKU",p[3]],
+  ["Revenue",eur(d.v)],["Units",num(R.unitsP[d.i])],["Share of revenue",tot?(d.v/tot*100).toFixed(1)+"%":"–"]])});hbars("c-products",items,"p","p",190)}
+
+function stockTable(R){const ms=S.m>=0?[S.m]:Array.from({length:NM},(_,i)=>i),end=R.endM,per=ms.length;
+ document.getElementById("stock-sub").textContent=`Units sold in ${S.m>=0?mLab(D.months[S.m]):"all months"} vs stock at the end of ${mLab(D.months[end])}. Click a row to filter.`;
+ const list=[];for(let p=0;p<NP;p++){if(S.cat>=0&&pCat[p]!==S.cat)continue;if(S.p>=0&&p!==S.p)continue;
+  const units=R.unitsP[p],stk=STK[p*NM+end];let out=0;ms.forEach(m=>{if(STK[p*NM+m]===0)out++});
+  if(units===0&&out===0)continue;const monthly=units/per;
+  const st=out>0?0:(stk>=0&&stk<monthly?1:2);list.push({p,units,stk,out,st,cover:monthly>0&&stk>=0?stk/monthly:Infinity})}
+ list.sort((a,b)=>a.st-b.st||b.out-a.out||a.cover-b.cover);
+ const SL=[["Ran out","var(--crit)"],["Low","var(--warn)"],["OK","var(--good)"]];
+ let h=`<table><thead><tr><th>Status</th><th>Product</th><th>Category</th><th class="n">Units sold</th><th class="n">Stock at end</th><th class="n">Months of cover</th><th class="n">Month ends at zero</th></tr></thead><tbody>`;
+ list.slice(0,150).forEach(r=>{const p=D.products[r.p];h+=`<tr class="row" data-i="${r.p}"><td><span class="st"><i style="background:${SL[r.st][1]}"></i>${SL[r.st][0]}</span></td><td>${esc(p[0])}</td><td>${D.categories[p[1]]}</td>`+
+  `<td class="n">${num(r.units)}</td><td class="n">${r.stk>=0?num(r.stk):"–"}</td><td class="n">${isFinite(r.cover)?r.cover.toFixed(1):"–"}</td><td class="n">${r.out||""}</td></tr>`});
+ h+=`</tbody></table>`;if(list.length>150)h+=`<div class="sub" style="padding:6px 8px">Showing the 150 most urgent of ${list.length} products.</div>`;
+ const el=document.getElementById("c-stock");el.innerHTML=h;el.querySelectorAll("tr.row").forEach(t=>t.onclick=()=>toggle("p",+t.dataset.i))}
+
+function render(){renderFilters();const R=compute();TIPS={};
+ const sel=S.m>=0?" in "+mLab(D.months[S.m]):"";
+ kpi("k-rev","Total revenue"+sel,eurS(R.rev),"before returns",R.revM,"krev");
+ kpi("k-ord","Orders"+sel,num(R.orders),"distinct order numbers",R.ordM,"kord");
+ kpi("k-units","Units sold"+sel,num(R.units),R.orders?(R.units/R.orders).toFixed(2)+" units per order":"",R.unitsM,"kunits");
+ kpi("k-stock","Stock on hand",num(R.stock),"units at end of "+mLab(D.months[R.endM]),R.stockM,"kstock");
+ TIPS.krev=()=>`<div class="t">Total revenue${sel}</div>`+rows([["Exact",eur(R.rev)],["Formula","qty × price × (1 − disc.)"]]);
+ TIPS.kord=()=>`<div class="t">Orders${sel}</div>`+rows([["Distinct orders",num(R.orders)],["Revenue per order",R.orders?eur(R.rev/R.orders):"–"]]);
+ TIPS.kunits=()=>`<div class="t">Units sold${sel}</div>`+rows([["Units",num(R.units)]]);
+ TIPS.kstock=()=>`<div class="t">Stock on hand</div>`+rows([["Units",num(R.stock)],["Snapshot",mLab(D.months[R.endM])+" month end"],["Country/channel filter","not applied (one warehouse)"]]);
+ trend(R);countries(R);products(R);stockTable(R);document.querySelectorAll(".kpi").forEach(bindTips)}
+document.getElementById("meta").textContent=`${mLab(D.months[0])} – ${mLab(D.months[NM-1])} · ${num(NL)} order lines · built ${D.built} from data/mart`;
+render();let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(render,120)});
+</script></body></html>

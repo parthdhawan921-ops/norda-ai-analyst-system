@@ -1,0 +1,14 @@
+{
+  "columns": {
+    "orders": ["ORD_NO", "CRTD_DT", "CHNL", "CTRY", "CUST_REF", "ART_NO", "QTY", "UNIT_PRC", "DISC_PCT"],
+    "products": ["sku", "product_name", "brand", "category", "list_price"],
+    "inventory": ["art_no", "stk_month", "qty_hand", "reserved_qty"]
+  },
+  "known_countries": ["DE", "FR", "IT", "NL", "ES", "AT"],
+  "country_names": {"Germany": "DE", "France": "FR", "Italy": "IT", "Netherlands": "NL", "Spain": "ES", "Austria": "AT"},
+  "known_channels": ["web", "app", "marketplace"],
+  "brands": ["Kaivo", "Kova", "Nodo", "Ondia", "Pavo", "Visna"],
+  "categories": ["Accessories", "Audio", "Computers", "Monitors", "Phones & Tablets"],
+  "max_discount": 0.5,
+  "volume_drop_threshold": 0.5
+}

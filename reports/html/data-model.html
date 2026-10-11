@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NORDA Data Model</title>
+<style>
+:root{--bg:#0f1419;--panel:#171e26;--line:#2a3542;--text:#d7dee6;--muted:#7d8a98;--fact:#e0a458;--dim:#5fa8d3;--hi:#f2f5f8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:24px 28px 8px}h1{margin:0;font-size:20px;font-weight:600}header p{margin:6px 0 0;color:var(--muted);max-width:900px}
+.legend{display:flex;gap:18px;padding:8px 28px 0;color:var(--muted);font-size:12px}.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.wrap{overflow-x:auto;padding:12px 28px 28px}.canvas{position:relative;width:1240px;height:720px}
+svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.t{position:absolute;width:250px;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;transition:opacity .15s,border-color .15s,box-shadow .15s;cursor:default}
+.t h2{margin:0;padding:9px 12px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;border-bottom:1px solid var(--line)}
+.t h2 small{font-weight:400;color:var(--muted)}.t.fact h2{color:var(--fact)}.t.dim h2{color:var(--dim)}
+.t ul{list-style:none;margin:0;padding:6px 0}.t li{padding:2px 12px;display:flex;justify-content:space-between;font-size:12px}
+.t li b{font-weight:500}.t li i{font-style:normal;color:var(--muted)}.t li.k b::before{content:"🔑 ";font-size:10px}.t li.fk b{color:var(--muted)}
+.t .grain{padding:6px 12px 9px;color:var(--muted);font-size:11.5px;border-top:1px solid var(--line)}
+.canvas.focus .t{opacity:.25}.canvas.focus .t.on{opacity:1;border-color:var(--hi);box-shadow:0 0 0 1px var(--hi)}
+path.rel{fill:none;stroke:#3d4b5a;stroke-width:1.6;transition:stroke .15s,opacity .15s}text.card{fill:var(--muted);font-size:12px;font-weight:600}
+.canvas.focus path.rel{opacity:.15}.canvas.focus path.rel.on{opacity:1;stroke:var(--hi);stroke-width:2.2}
+.canvas.focus text.card{opacity:.15}.canvas.focus text.card.on{opacity:1;fill:var(--hi)}
+.notes{padding:0 28px 32px;color:var(--muted);max-width:980px}.notes li{margin:4px 0}
+</style></head><body>
+<header><h1>NORDA sales mart: star schema</h1>
+<p>Two facts in the middle, four shared dimensions around them. Every relationship is one-to-many (1 on the dimension, * on the fact) and the two facts are never joined directly. Hover a table to see its relationships.</p></header>
+<div class="legend"><span style="--c:var(--fact)">Fact table</span><span style="--c:var(--dim)">Dimension table</span><span style="--c:#7d8a98">🔑 key · grey = foreign key</span></div>
+<div class="wrap"><div class="canvas" id="cv">
+<svg id="lines"></svg>
+<div class="t dim" id="dim_country" style="left:0;top:40px"><h2>dim_country <small>6 rows</small></h2><ul>
+<li class="k"><b>country_key</b><i>int</i></li><li><b>country_code</b><i>text</i></li><li><b>country_name</b><i>text</i></li><li><b>in_company_overview</b><i>Yes/No</i></li></ul>
+<div class="grain">One row per delivery country. ES and AT are flagged "No".</div></div>
+<div class="t dim" id="dim_channel" style="left:0;top:470px"><h2>dim_channel <small>3 rows</small></h2><ul>
+<li class="k"><b>channel_key</b><i>int</i></li><li><b>channel_name</b><i>text</i></li></ul>
+<div class="grain">web, app, marketplace.</div></div>
+<div class="t fact" id="fact_sales" style="left:330px;top:170px"><h2>fact_sales <small>156,824 rows</small></h2><ul>
+<li class="fk"><b>order_date_key</b><i>int</i></li><li class="fk"><b>product_key</b><i>int</i></li><li class="fk"><b>country_key</b><i>int</i></li><li class="fk"><b>channel_key</b><i>int</i></li>
+<li><b>order_id</b><i>text</i></li><li><b>quantity</b><i>int</i></li><li><b>unit_price</b><i>€</i></li><li><b>discount_rate</b><i>0–0.5</i></li>
+<li><b>gross_revenue</b><i>€</i></li><li><b>discount_amount</b><i>€</i></li><li><b>net_revenue</b><i>€</i></li></ul>
+<div class="grain">One row per order line. Orders = distinct order_id, never a row count.</div></div>
+<div class="t dim" id="dim_date" style="left:660px;top:0"><h2>dim_date <small>365 rows</small></h2><ul>
+<li class="k"><b>date_key</b><i>YYYYMMDD</i></li><li><b>date</b><i>date</i></li><li><b>year</b><i>int</i></li><li><b>quarter</b><i>int</i></li><li><b>month_num</b><i>int</i></li><li><b>month_name</b><i>text</i></li><li><b>year_month</b><i>text</i></li><li><b>day_of_month</b><i>int</i></li><li><b>is_month_end</b><i>0/1</i></li></ul>
+<div class="grain">One row per calendar day. Shared by both facts.</div></div>
+<div class="t dim" id="dim_product" style="left:660px;top:450px"><h2>dim_product <small>377 rows</small></h2><ul>
+<li class="k"><b>product_key</b><i>int</i></li><li><b>sku</b><i>text</i></li><li><b>product_name</b><i>text</i></li><li><b>brand</b><i>text</i></li><li><b>category</b><i>text</i></li><li><b>list_price</b><i>€ ref.</i></li></ul>
+<div class="grain">Whole catalogue. Shared by both facts.</div></div>
+<div class="t fact" id="fact_inventory" style="left:990px;top:250px"><h2>fact_inventory <small>4,222 rows</small></h2><ul>
+<li class="fk"><b>snapshot_date_key</b><i>int</i></li><li class="fk"><b>product_key</b><i>int</i></li><li><b>stock_month</b><i>YYYY-MM</i></li><li><b>quantity_on_hand</b><i>int</i></li></ul>
+<div class="grain">One row per article per month end. Semi-additive: never sum across months.</div></div>
+</div></div>
+<ul class="notes">
+<li>fact_sales → dim_date on order_date_key = date_key; fact_inventory → dim_date on snapshot_date_key = date_key (always a month end).</li>
+<li>Stock has no country or channel: NORDA has one warehouse, so stock does not move with those filters.</li>
+<li>Built by <code>.claude/skills/mart/build_mart.py</code>. Metric definitions: <code>knowledge/metrics.md</code>.</li>
+</ul>
+<script>
+const rels=[["fact_sales","dim_date"],["fact_sales","dim_product"],["fact_sales","dim_country"],["fact_sales","dim_channel"],["fact_inventory","dim_date"],["fact_inventory","dim_product"]];
+const cv=document.getElementById('cv'),svg=document.getElementById('lines'),NS='http://www.w3.org/2000/svg';
+function box(id){const e=document.getElementById(id);return{x:e.offsetLeft,y:e.offsetTop,w:e.offsetWidth,h:e.offsetHeight}}
+function anchor(a,b){const ca={x:a.x+a.w/2,y:a.y+a.h/2},cb={x:b.x+b.w/2,y:b.y+b.h/2};
+ if(Math.abs(cb.x-ca.x)>a.w/2+b.w/2-40){const s=cb.x>ca.x?1:-1;return{x:ca.x+s*a.w/2,y:Math.min(Math.max(cb.y,a.y+20),a.y+a.h-20),h:true,s}}
+ const s=cb.y>ca.y?1:-1;return{x:ca.x,y:ca.y+s*a.h/2,h:false,s}}
+function draw(){svg.innerHTML='';rels.forEach(([f,d])=>{const A=box(f),B=box(d),p=anchor(A,B),q=anchor(B,A);
+ const c1=p.h?{x:p.x+p.s*80,y:p.y}:{x:p.x,y:p.y+p.s*60},c2=q.h?{x:q.x+q.s*80,y:q.y}:{x:q.x,y:q.y+q.s*60};
+ const path=document.createElementNS(NS,'path');path.setAttribute('d',`M${p.x},${p.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${q.x},${q.y}`);path.setAttribute('class','rel');path.dataset.a=f;path.dataset.b=d;svg.appendChild(path);
+ [[p,'*',f,d],[q,'1',f,d]].forEach(([pt,t])=>{const tx=document.createElementNS(NS,'text');tx.textContent=t;tx.setAttribute('class','card');tx.dataset.a=f;tx.dataset.b=d;
+  tx.setAttribute('x',pt.x+(pt.h?pt.s*10:8));tx.setAttribute('y',pt.y+(pt.h?-6:pt.s*16));if(pt.h&&pt.s<0)tx.setAttribute('text-anchor','end');svg.appendChild(tx)})})}
+draw();
+document.querySelectorAll('.t').forEach(t=>{t.addEventListener('mouseenter',()=>{const id=t.id;cv.classList.add('focus');
+ const linked=new Set([id]);rels.forEach(([a,b])=>{if(a===id||b===id){linked.add(a);linked.add(b)}});
+ document.querySelectorAll('.t').forEach(x=>x.classList.toggle('on',linked.has(x.id)));
+ svg.querySelectorAll('[data-a]').forEach(l=>l.classList.toggle('on',l.dataset.a===id||l.dataset.b===id))});
+ t.addEventListener('mouseleave',()=>{cv.classList.remove('focus')})});
+</script></body></html>
