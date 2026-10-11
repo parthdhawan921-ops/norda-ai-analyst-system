@@ -1,5 +1,8 @@
 # NORDA AI Analyst System
 
+**Live dashboard:** https://parthdhawan921-ops.github.io/norda-ai-analyst-system/reports/html/dashboard.html  
+**Data model diagram:** https://parthdhawan921-ops.github.io/norda-ai-analyst-system/reports/html/data-model.html
+
 An AI-assisted analytics pipeline for a European electronics retailer (NORDA, practice
 company from Baraa's *Claude for data analysts* course on LinkedIn Learning), built
 with Claude Code. It turns a messy monthly shop export into checked numbers, an
