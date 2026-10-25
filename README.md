@@ -8,7 +8,9 @@ company from Baraa's *Claude for data analysts* course on LinkedIn Learning), bu
 with Claude Code. It turns a messy monthly shop export into checked numbers, an
 interactive dashboard, a meeting deck and a Power BI model with **one command**.
 
-**Headline:** 41/41 quality checks pass in under 30 seconds, and the pipeline found €274K to €442K of December sales lost to 3 stock-outs.
+- **What I did:** Built a one-command pipeline that turns a messy monthly sales export into checked tables, a dashboard, a deck and a Power BI model.
+- **What I found:** **3 top laptop models sold out on 14 Nov and were never restocked**, costing €274K to €442K of December sales.
+- **Why it matters:** Restock alerts on top sellers protect the biggest month. Every report now passes 41 quality checks first.
 
 **Interactive case file:** [parthdhawan921-ops.github.io/Parth_Personal/#norda](https://parthdhawan921-ops.github.io/Parth_Personal/#norda)
 
