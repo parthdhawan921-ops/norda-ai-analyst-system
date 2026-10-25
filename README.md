@@ -8,6 +8,10 @@ company from Baraa's *Claude for data analysts* course on LinkedIn Learning), bu
 with Claude Code. It turns a messy monthly shop export into checked numbers, an
 interactive dashboard, a meeting deck and a Power BI model with **one command**.
 
+**Headline:** 41/41 quality checks pass in under 30 seconds, and the pipeline found €274K to €442K of December sales lost to 3 stock-outs.
+
+**Interactive case file:** [parthdhawan921-ops.github.io/Parth_Personal/#norda](https://parthdhawan921-ops.github.io/Parth_Personal/#norda)
+
 ```
 data/raw ──/profile──> data/clean ──/mart──> data/mart ──/quality-gate──> reports
  (export)   check 25     (fixed)     star     (4 dims,     41 checks       dashboard · slides · Power BI
